@@ -17,6 +17,14 @@ const openai = new OpenAI({
 app.use(cors()); // Allows your frontend to talk to this server
 app.use(express.json()); // Allows the server to understand JSON requests
 
+// === ADD THIS NEW BLOCK ===
+// This is the health check endpoint for UptimeRobot to ping.
+// When UptimeRobot visits /health, the server will respond with "OK".
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is alive and well!' });
+});
+// === END OF NEW BLOCK ===
+
 // Define the API endpoint for generating questions
 app.post('/api/generate-questions', async (req, res) => {
   const { exam, subject, count } = req.body;
@@ -38,15 +46,12 @@ app.post('/api/generate-questions', async (req, res) => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview", // A powerful model for this task
+      model: "gpt-4-turbo-preview",
       messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" }, // Ensures the output is clean JSON
+      response_format: { type: "json_object" },
     });
 
-    // The AI's response is a JSON string inside the 'content' field. We need to parse it.
     const questionsJson = JSON.parse(response.choices[0].message.content);
-    
-    // Send the structured questions back to the frontend
     res.json(questionsJson);
 
   } catch (error) {
